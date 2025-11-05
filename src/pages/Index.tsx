@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { HeaderNav } from "@/components/HeaderNav";
 import { OptimizationForm, type FormParams } from "@/components/OptimizationForm";
 import { MonthlyDataTable } from "@/components/MonthlyDataTable";
 import { ResultsDisplay } from "@/components/ResultsDisplay";
 import { optimizeWithTiming, type MonthlyData, type OptimizationResult } from "@/lib/optimizer";
-import { Zap } from "lucide-react";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -43,21 +43,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
-      <header className="gradient-primary text-white shadow-elevated">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <Zap className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Otimizador de Demanda Elétrica</h1>
-              <p className="text-sm text-white/80 mt-0.5">
-                Análise inteligente para economia em contratos de energia
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <HeaderNav />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 space-y-8">

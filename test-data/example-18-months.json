@@ -1,0 +1,128 @@
+[
+  {
+    "ano_mes": "2024-01",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 450,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-02",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 480,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-03",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 520,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-04",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 490,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-05",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 510,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-06",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 530,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-07",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 470,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-08",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 460,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-09",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 495,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-10",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 505,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-11",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 515,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2024-12",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 525,
+    "tarifa_demanda_r_pkW": 52.50,
+    "tarifa_ultrapassagem_r_pkW": 105.00
+  },
+  {
+    "ano_mes": "2025-01",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 440,
+    "tarifa_demanda_r_pkW": 54.00,
+    "tarifa_ultrapassagem_r_pkW": 108.00
+  },
+  {
+    "ano_mes": "2025-02",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 465,
+    "tarifa_demanda_r_pkW": 54.00,
+    "tarifa_ultrapassagem_r_pkW": 108.00
+  },
+  {
+    "ano_mes": "2025-03",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 485,
+    "tarifa_demanda_r_pkW": 54.00,
+    "tarifa_ultrapassagem_r_pkW": 108.00
+  },
+  {
+    "ano_mes": "2025-04",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 475,
+    "tarifa_demanda_r_pkW": 54.00,
+    "tarifa_ultrapassagem_r_pkW": 108.00
+  },
+  {
+    "ano_mes": "2025-05",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 500,
+    "tarifa_demanda_r_pkW": 54.00,
+    "tarifa_ultrapassagem_r_pkW": 108.00
+  },
+  {
+    "ano_mes": "2025-06",
+    "demanda_contratada_kw": 500,
+    "demanda_medida_kw": 510,
+    "tarifa_demanda_r_pkW": 54.00,
+    "tarifa_ultrapassagem_r_pkW": 108.00
+  }
+]
