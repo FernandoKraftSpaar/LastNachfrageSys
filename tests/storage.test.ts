@@ -35,8 +35,8 @@ describe('CSV Parser', () => {
     const result = parseCSV(csv);
 
     expect(result).toHaveLength(2);
-    expect(result[0].tarifa_demanda_r_pkW).toBe(50); // default
-    expect(result[0].tarifa_ultrapassagem_r_pkW).toBe(100); // default
+    expect(result[0].tarifa_demanda_r_pkW).toBeUndefined();
+    expect(result[0].tarifa_ultrapassagem_r_pkW).toBeUndefined();
   });
 
   it('should handle empty lines in CSV', () => {
@@ -60,7 +60,111 @@ describe('CSV Parser', () => {
     const csv = `month,value
 2024-01,500`;
 
-    expect(() => parseCSV(csv)).toThrow('ano_mes');
+    expect(() => parseCSV(csv)).toThrow('data');
+  });
+
+  it('should parse CSV with semicolon delimiter', () => {
+    const csv = `ano_mes;demanda_medida_kw
+2024-01;450
+2024-02;480`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-01');
+    expect(result[0].demanda_medida_kw).toBe(450);
+  });
+
+  it('should parse numeric values with comma decimal separator', () => {
+    const csv = `ano_mes;demanda_medida_kw;demanda_contratada_kw
+2024-01;1.234,56;1.500,00
+2024-02;2.345,67;1.500,00`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].demanda_medida_kw).toBe(1234.56);
+    expect(result[0].demanda_contratada_kw).toBe(1500);
+    expect(result[1].demanda_medida_kw).toBe(2345.67);
+  });
+
+  it('should parse currency values with symbols', () => {
+    const csv = `ano_mes;tarifa_demanda_r_pkW;tarifa_ultrapassagem_r_pkW
+2024-01;R$ 52,50;R$ 105,00
+2024-02;52,50;105,00`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].tarifa_demanda_r_pkW).toBe(52.50);
+    expect(result[0].tarifa_ultrapassagem_r_pkW).toBe(105);
+    expect(result[1].tarifa_demanda_r_pkW).toBe(52.50);
+  });
+
+  it('should handle quoted fields with embedded delimiters', () => {
+    const csv = `ano_mes,demanda_medida_kw
+"2024-01","450,50"
+"2024-02","480,75"`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-01');
+    expect(result[0].demanda_medida_kw).toBe(450.50);
+  });
+
+  it('should convert DD/MM/YYYY dates to YYYY-MM format', () => {
+    const csv = `date;demanda_medida_kw
+01/01/2024;450
+15/02/2024;480
+31/12/2023;520`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].ano_mes).toBe('2024-01');
+    expect(result[1].ano_mes).toBe('2024-02');
+    expect(result[2].ano_mes).toBe('2023-12');
+  });
+
+  it('should convert various date formats to YYYY-MM', () => {
+    const csv = `data,demanda
+2024-03-15,450
+03/2024,480
+2024-04,520`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].ano_mes).toBe('2024-03');
+    expect(result[1].ano_mes).toBe('2024-03');
+    expect(result[2].ano_mes).toBe('2024-04');
+  });
+
+  it('should detect column names with Portuguese variations', () => {
+    const csv = `Data;Demanda Medida (kW);Demanda Contratada (kW)
+01/01/2024;1.234,56;1.500,00
+15/02/2024;2.345,67;1.500,00`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-01');
+    expect(result[0].demanda_medida_kw).toBe(1234.56);
+    expect(result[0].demanda_contratada_kw).toBe(1500);
+  });
+
+  it('should infer demand column from first numeric column when not found by name', () => {
+    const csv = `mes,valor
+2024-01,450.5
+2024-02,480.75`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-01');
+    expect(result[0].demanda_medida_kw).toBe(450.5);
+    expect(result[1].demanda_medida_kw).toBe(480.75);
   });
 });
 
