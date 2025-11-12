@@ -51,8 +51,7 @@ export function clearLocalStorage(): void {
 
 /**
  * Parse CSV string to monthly data
- * Expected format: ano_mes,demanda_contratada_kw,demanda_medida_kw,tarifa_demanda_r_pkW,tarifa_ultrapassagem_r_pkW
- */
+ * Expected format: ano_mes, demanda_medida_kw*/
 export function parseCSV(csvText: string): MonthlyData[] {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) {
@@ -64,18 +63,9 @@ export function parseCSV(csvText: string): MonthlyData[] {
 
   // Find column indices
   const colIdx = {
-    ano_mes: header.indexOf('ano_mes'),
-    demanda_contratada_kw: header.findIndex(h => 
-      h.includes('demanda_contratada') || h.includes('contratada')
-    ),
+    ano_mes: header.indexOf('date'),
     demanda_medida_kw: header.findIndex(h => 
-      h.includes('demanda_medida') || h.includes('medida')
-    ),
-    tarifa_demanda: header.findIndex(h => 
-      h.includes('tarifa_demanda') || h.includes('td')
-    ),
-    tarifa_ultrapassagem: header.findIndex(h => 
-      h.includes('tarifa_ultrapassagem') || h.includes('tu')
+      h.includes('tavg_C') || h.includes('medida')
     ),
   };
 
@@ -91,14 +81,7 @@ export function parseCSV(csvText: string): MonthlyData[] {
     
     const item: MonthlyData = {
       ano_mes: values[colIdx.ano_mes] || '',
-      demanda_contratada_kw: parseFloat(values[colIdx.demanda_contratada_kw] || '0') || 0,
       demanda_medida_kw: parseFloat(values[colIdx.demanda_medida_kw] || '0') || 0,
-      tarifa_demanda_r_pkW: colIdx.tarifa_demanda >= 0 
-        ? parseFloat(values[colIdx.tarifa_demanda] || '0') || 0 
-        : 50,
-      tarifa_ultrapassagem_r_pkW: colIdx.tarifa_ultrapassagem >= 0 
-        ? parseFloat(values[colIdx.tarifa_ultrapassagem] || '0') || 0 
-        : 100,
     };
 
     data.push(item);
