@@ -62,6 +62,94 @@ describe('CSV Parser', () => {
 
     expect(() => parseCSV(csv)).toThrow('ano_mes');
   });
+
+  it('should parse DD/MM/YYYY format to YYYY-MM', () => {
+    const csv = `data,demanda_medida_kw
+01/05/2024,450.5
+15/06/2024,480.75`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-05');
+    expect(result[0].demanda_medida_kw).toBe(450.5);
+    expect(result[1].ano_mes).toBe('2024-06');
+  });
+
+  it('should parse D/M/YYYY format to YYYY-MM', () => {
+    const csv = `date,demanda
+1/5/2024,450
+5/12/2023,480`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-05');
+    expect(result[1].ano_mes).toBe('2023-12');
+  });
+
+  it('should parse DD-MM-YYYY format to YYYY-MM', () => {
+    const csv = `periodo,demanda_medida
+01-05-2024,450
+15-06-2024,480`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-05');
+    expect(result[1].ano_mes).toBe('2024-06');
+  });
+
+  it('should parse MM/YYYY format to YYYY-MM', () => {
+    const csv = `mes,demanda
+05/2024,450
+12/2023,480`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-05');
+    expect(result[1].ano_mes).toBe('2023-12');
+  });
+
+  it('should parse YYYY-MM format (keep as-is)', () => {
+    const csv = `ano_mes,demanda_medida_kw
+2024-05,450
+2023-12,480`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-05');
+    expect(result[1].ano_mes).toBe('2023-12');
+  });
+
+  it('should handle comma decimal separators in demand values', () => {
+    const csv = `data;demanda_medida_kw
+01/05/2024;1.234,56
+15/06/2024;2.345,67`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(2);
+    expect(result[0].ano_mes).toBe('2024-05');
+    expect(result[0].demanda_medida_kw).toBeCloseTo(1234.56, 2);
+    expect(result[1].demanda_medida_kw).toBeCloseTo(2345.67, 2);
+  });
+
+  it('should handle mixed date formats in same CSV', () => {
+    const csv = `data,demanda
+01/05/2024,450
+2024-06,480
+05-2023,500`;
+
+    const result = parseCSV(csv);
+
+    expect(result).toHaveLength(3);
+    expect(result[0].ano_mes).toBe('2024-05');
+    expect(result[1].ano_mes).toBe('2024-06');
+    expect(result[2].ano_mes).toBe('2023-05');
+  });
 });
 
 describe('JSON Parser', () => {
