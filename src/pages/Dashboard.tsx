@@ -66,7 +66,7 @@ const Dashboard = () => {
       try {
         const optimizationResult = optimizeSequenceDP(monthlyData, {
           risco: 5,
-          min_contract_kw: 100,
+          min_contract_kw: 30,
           step_size_kw: 10,
           gridPoints: 30,
           delay_months: 1,
