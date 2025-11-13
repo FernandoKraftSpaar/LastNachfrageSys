@@ -1,5 +1,7 @@
 // Utility functions for optimization calculations
 
+import { preprocessSeries, computeSeasonalIndex, deseasonalize } from "./analysis";
+
 export interface MonthlyData {
   ano_mes: string;
   demanda_contratada_kw: number;
@@ -23,6 +25,11 @@ export interface OptimizationParams {
   igpm_mensal_pct: Record<string, number>;
   tarifa_demanda?: number;
   tarifa_ultrapassagem?: number;
+  // Novo parâmetro de penalidade (β) usado em analysis.ts (findOptimalDGridSearch)
+  penalty_beta?: number;
+  // Novo: habilita dessazonalização no processo de geração de candidatos
+  useDeseasonalize?: boolean;
+  seasonal_period?: number; // default 12
 }
 
 export interface OptimizationResult {
@@ -83,23 +90,22 @@ function avg(arr: number[]): number {
 }
 
 /**
- * Cost calculation using Formula B:
- * custo_t = medida_t * TD_t + max(0, medida_t - contratada_t) * TU_t
- * 
- * This charges the full measured demand at the demand tariff,
- * plus any excess over contracted at the excess tariff.
+ * Cost calculation aligned with analysis.ts (evaluateCostForD):
+ * total = contractedLevel * TD + max(0, medida - contractedLevel) * TU
+ *
+ * Isso cobra o custo fixo do contratado (por kW contratado) e penaliza somente o excesso.
  */
 function costForContraction(item: MonthlyData, contraction: number): number {
   const medida = item.demanda_medida_kw;
-  const TD = item.tarifa_demanda_r_pkW || item.custo_demanda || 0;
-  const TU = item.tarifa_ultrapassagem_r_pkW || item.custo_ultrapassagem || 0;
-  
-  // Formula B: charge measured demand + excess
-  const demandaCost = medida * TD;
+  // Prefer explicit tarifa fields, mas mantém compatibilidade com campos legados
+  const TD = item.tarifa_demanda_r_pkW ?? item.custo_demanda ?? 0;
+  const TU = item.tarifa_ultrapassagem_r_pkW ?? item.custo_ultrapassagem ?? 0;
+
+  const baseCost = contraction * TD;
   const excesso = Math.max(0, medida - contraction);
   const ultrapassagemCost = excesso * TU;
-  
-  return demandaCost + ultrapassagemCost;
+
+  return baseCost + ultrapassagemCost;
 }
 
 function igpmFactor(
@@ -117,13 +123,31 @@ export function optimizeWithTiming(
   params: OptimizationParams
 ): OptimizationResult {
   const T = items.length;
-  const medidas = items
-    .map((it) => Number(it.demanda_medida_kw || 0))
-    .filter((v) => v > 0);
+  const seasonalPeriod = params.seasonal_period ?? 12;
+
+  // Raw measured series (used for cost calculation)
+  const measuredSeries = items.map((it) => Number(it.demanda_medida_kw || 0)).filter(v => v > 0);
+
+  // Optionally compute dessazonalized series and use it for stats / geração de candidatos
+  let seriesForCandidates: number[] = measuredSeries;
+  if (params.useDeseasonalize) {
+    try {
+      const preprocessed = preprocessSeries(measuredSeries);
+      const seasonalIndices = computeSeasonalIndex(preprocessed, seasonalPeriod);
+      const deseasonalized = deseasonalize(preprocessed, seasonalIndices);
+      // Use deseasonalized for quantil e limites
+      seriesForCandidates = deseasonalized.map(v => Number(v));
+    } catch (err) {
+      // Fallback para a série original caso haja erro na dessazonalização
+      seriesForCandidates = measuredSeries;
+    }
+  }
+
+  const medidas = seriesForCandidates.filter((v) => v > 0);
 
   const q = quantile(medidas, 1 - params.risco / 100);
   const lower = Math.max(q, params.min_contract_kw || 0);
-  const upper = Math.max(lower, Math.max(...medidas) * 1.1);
+  const upper = Math.max(lower, Math.max(...measuredSeries) * 1.1);
   const candidates = linspace(lower, upper, params.gridPoints || 30).map((c) =>
     roundToStep(c, params.step_size_kw)
   );
@@ -131,7 +155,7 @@ export function optimizeWithTiming(
   // Remove duplicates after rounding
   const uniqCandidates = [...new Set(candidates)].sort((a, b) => a - b);
 
-  // Precompute cost matrix
+  // Precompute cost matrix (usa medidas reais)
   const costMatrix = uniqCandidates.map((c) =>
     items.map((it) => costForContraction(it, c))
   );
@@ -163,7 +187,7 @@ export function optimizeWithTiming(
       )
         continue;
 
-      // Calculate corrected savings
+      // Calculate corrected savings (uses cost matrix based on real measures)
       let economia_corr = 0;
       for (let t = s_eff; t <= T; t++) {
         const delta = baseCosts[t - 1] - costMatrix[i][t - 1];
@@ -173,6 +197,27 @@ export function optimizeWithTiming(
           params.igpm_mensal_pct || {}
         );
         economia_corr += Math.max(0, delta) * fator;
+      }
+
+      // Aplicar penalidade β baseada na taxa de ultrapassagem objetivo (params.risco)
+      const penaltyBeta = params.penalty_beta ?? 0;
+      if (penaltyBeta > 0) {
+        // Considera apenas o horizonte de efetivação (de s_eff até T)
+        const startIdx = s_eff - 1;
+        const endIdx = T - 1;
+        const effectiveMonths = Math.max(0, endIdx - startIdx + 1);
+        if (effectiveMonths > 0) {
+          let exceedances = 0;
+          for (let t = startIdx; t <= endIdx; t++) {
+            if (items[t].demanda_medida_kw > x) exceedances++;
+          }
+          const exceedanceRate = exceedances / effectiveMonths;
+          const targetRate = params.risco / 100; // params.risco vem em %
+          const deviation = exceedanceRate - targetRate;
+          const penalty = penaltyBeta * deviation * deviation;
+          // Subtrai penalidade da economia_corr (penaliza candidatos que se desviam do target)
+          economia_corr -= penalty;
+        }
       }
 
       if (economia_corr > best.economia_corr) {
@@ -201,13 +246,29 @@ export function optimizeSequenceDP(
     throw new Error("No monthly data provided");
   }
 
-  const medidas = items
-    .map((it) => Number(it.demanda_medida_kw || 0))
-    .filter((v) => v > 0);
+  const seasonalPeriod = params.seasonal_period ?? 12;
+
+  // Raw measured series (used for cost calculation)
+  const measuredSeries = items.map((it) => Number(it.demanda_medida_kw || 0)).filter(v => v > 0);
+
+  // Optionally compute dessazonalized series and use it for stats / geração de candidatos
+  let seriesForCandidates: number[] = measuredSeries;
+  if (params.useDeseasonalize) {
+    try {
+      const preprocessed = preprocessSeries(measuredSeries);
+      const seasonalIndices = computeSeasonalIndex(preprocessed, seasonalPeriod);
+      const deseasonalized = deseasonalize(preprocessed, seasonalIndices);
+      seriesForCandidates = deseasonalized.map(v => Number(v));
+    } catch (err) {
+      seriesForCandidates = measuredSeries;
+    }
+  }
+
+  const medidas = seriesForCandidates.filter((v) => v > 0);
 
   const q = quantile(medidas, 1 - params.risco / 100);
   const lower = Math.max(q, params.min_contract_kw || 0);
-  const upper = Math.max(lower, Math.max(...medidas) * 1.1);
+  const upper = Math.max(lower, Math.max(...measuredSeries) * 1.1);
   const candidates = linspace(lower, upper, params.gridPoints || 30).map((c) =>
     roundToStep(c, params.step_size_kw)
   );
@@ -216,6 +277,7 @@ export function optimizeSequenceDP(
   const C = uniqCandidates.length;
 
   // Precompute cost matrix: costMatrix[c][t] = cost at month t with level c
+  // Note: costForContraction já usa a fórmula contratada*TD + excesso*TU
   const costMatrix: number[][] = uniqCandidates.map((level) =>
     items.map((it) => costForContraction(it, level))
   );
@@ -424,7 +486,23 @@ export function optimizeSequenceDP(
 
   const totalCostReal = baseCosts.reduce((a, b) => a + b, 0);
   const totalCostOptimized = monthlyBreakdown.reduce((sum, m) => sum + m.custo_otimo, 0);
-  const totalSavings = totalCostReal - totalCostOptimized;
+  let totalSavings = totalCostReal - totalCostOptimized;
+
+  // Aplicar penalidade global no resultado DP, se fornecida
+  const penaltyBetaGlobal = params.penalty_beta ?? 0;
+  if (penaltyBetaGlobal > 0) {
+    // Calcula taxa de ultrapassagem do plano otimizado
+    let exceedances = 0;
+    for (let i = 0; i < T; i++) {
+      if (items[i].demanda_medida_kw > contractedLevels[i]) exceedances++;
+    }
+    const exceedanceRate = exceedances / T;
+    const targetRate = params.risco / 100;
+    const deviation = exceedanceRate - targetRate;
+    const penalty = penaltyBetaGlobal * deviation * deviation;
+    // Subtrai penalidade das economias reportadas
+    totalSavings -= penalty;
+  }
 
   return {
     economia_corr: totalSavings,
