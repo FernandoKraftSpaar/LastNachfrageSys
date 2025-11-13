@@ -107,7 +107,7 @@ function parseNumberValue(raw: string | undefined): number {
   }
 
   // Remove anything that's not digit, dot or minus
-  v = v.replace(/[^0-9\.\-]/g, '');
+  v = v.replace(/[^0-9.-]/g, '');
 
   const n = parseFloat(v);
   return Number.isFinite(n) ? n : NaN;
@@ -118,11 +118,11 @@ function parseNumberValue(raw: string | undefined): number {
  */
 function parseDateToAnoMes(raw: string | undefined): string {
   if (!raw) return '';
-  let s = raw.trim().replace(/^"|"$/g, '');
+  const s = raw.trim().replace(/^"|"$/g, '');
 
   // Common patterns:
   // DD/MM/YYYY or D/M/YYYY or DD-MM-YYYY
-  const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  const dmy = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (dmy) {
     const day = dmy[1].padStart(2, '0');
     const month = dmy[2].padStart(2, '0');
@@ -134,7 +134,7 @@ function parseDateToAnoMes(raw: string | undefined): string {
   }
 
   // YYYY-MM or YYYY/MM
-  const yM = s.match(/^(\d{4})[\/\-](\d{1,2})$/);
+  const yM = s.match(/^(\d{4})[/-](\d{1,2})$/);
   if (yM) {
     const year = yM[1];
     const month = yM[2].padStart(2, '0');
@@ -142,7 +142,7 @@ function parseDateToAnoMes(raw: string | undefined): string {
   }
 
   // MM/YYYY or M/YYYY
-  const My = s.match(/^(\d{1,2})[\/\-](\d{4})$/);
+  const My = s.match(/^(\d{1,2})[/-](\d{4})$/);
   if (My) {
     const month = My[1].padStart(2, '0');
     const year = My[2];
@@ -298,7 +298,7 @@ export function parseJSON(jsonText: string): MonthlyData[] {
       throw new Error('JSON must be an array');
     }
 
-    return parsed.map((item: any) => ({
+    return parsed.map((item: Record<string, unknown>) => ({
       ano_mes: item.ano_mes || '',
       demanda_contratada_kw: parseFloat(item.demanda_contratada_kw || '0') || 0,
       demanda_medida_kw: parseFloat(item.demanda_medida_kw || '0') || 0,
