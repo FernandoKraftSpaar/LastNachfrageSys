@@ -1,4 +1,5 @@
 import { MonthlyData } from './optimizer';
+import { normalizeAnoMes } from './dateUtils';
 
 const STORAGE_KEY = 'demand_items_v1';
 
@@ -31,7 +32,13 @@ export function loadFromLocalStorage(): MonthlyData[] {
     if (!stored) return [];
 
     const parsed: StoredData = JSON.parse(stored);
-    return parsed.monthlyData || [];
+    const data = parsed.monthlyData || [];
+    
+    // Normalize ano_mes for all loaded items
+    return data.map(item => ({
+      ...item,
+      ano_mes: normalizeAnoMes(item.ano_mes),
+    }));
   } catch (error) {
     console.error('Failed to load from localStorage:', error);
     return [];
@@ -254,7 +261,7 @@ export function parseCSV(csvText: string): MonthlyData[] {
     const values = splitRow(line, delimiter);
 
     const rawDate = values[colIdxAnoMes] || '';
-    const ano_mes = parseDateToAnoMes(rawDate);
+    const ano_mes = normalizeAnoMes(rawDate);
 
     let demandaVal = 0;
     if (colIdxDemanda !== -1) {
@@ -266,6 +273,7 @@ export function parseCSV(csvText: string): MonthlyData[] {
     const item: MonthlyData = {
       ano_mes,
       demanda_medida_kw: demandaVal,
+      demanda_contratada_kw: 0, // default value for optimizer compatibility
     };
 
     data.push(item);
@@ -282,7 +290,9 @@ export function exportToCSV(data: MonthlyData[]): string {
   const rows = data.map(item => {
     const td = item.tarifa_demanda_r_pkW || item.custo_demanda || 0;
     const tu = item.tarifa_ultrapassagem_r_pkW || item.custo_ultrapassagem || 0;
-    return `${item.ano_mes},${item.demanda_contratada_kw},${item.demanda_medida_kw},${td},${tu}`;
+    // Defensively ensure ano_mes is in YYYY-MM format
+    const anoMes = item.ano_mes && item.ano_mes.length >= 7 ? item.ano_mes.slice(0, 7) : item.ano_mes;
+    return `${anoMes},${item.demanda_contratada_kw},${item.demanda_medida_kw},${td},${tu}`;
   });
 
   return [header, ...rows].join('\n');
@@ -299,11 +309,11 @@ export function parseJSON(jsonText: string): MonthlyData[] {
     }
 
     return parsed.map((item: Record<string, unknown>) => ({
-      ano_mes: item.ano_mes || '',
-      demanda_contratada_kw: parseFloat(item.demanda_contratada_kw || '0') || 0,
-      demanda_medida_kw: parseFloat(item.demanda_medida_kw || '0') || 0,
-      tarifa_demanda_r_pkW: parseFloat(item.tarifa_demanda_r_pkW || item.custo_demanda || '50') || 50,
-      tarifa_ultrapassagem_r_pkW: parseFloat(item.tarifa_ultrapassagem_r_pkW || item.custo_ultrapassagem || '100') || 100,
+      ano_mes: normalizeAnoMes(String(item.ano_mes || '')),
+      demanda_contratada_kw: parseFloat(String(item.demanda_contratada_kw || '0')) || 0,
+      demanda_medida_kw: parseFloat(String(item.demanda_medida_kw || '0')) || 0,
+      tarifa_demanda_r_pkW: parseFloat(String(item.tarifa_demanda_r_pkW || item.custo_demanda || '50')) || 50,
+      tarifa_ultrapassagem_r_pkW: parseFloat(String(item.tarifa_ultrapassagem_r_pkW || item.custo_ultrapassagem || '100')) || 100,
     }));
   } catch (error) {
     throw new Error(`Failed to parse JSON: ${error}`);

@@ -81,14 +81,21 @@ export function MonthlyDataTable({ data, onChange }: MonthlyDataTableProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              data.map((row, index) => (
+              data.map((row, index) => {
+                // Defensive: ensure value passed to input type="month" is YYYY-MM
+                const displayValue = row.ano_mes && row.ano_mes.length >= 7 ? row.ano_mes.slice(0, 7) : row.ano_mes;
+                // Check if format is valid (YYYY-MM)
+                const isValidFormat = /^\d{4}-\d{2}$/.test(displayValue);
+                
+                return (
                 <TableRow key={index}>
                   <TableCell>
                     <Input
                       type="month"
-                      value={row.ano_mes}
+                      value={displayValue}
                       onChange={(e) => updateRow(index, "ano_mes", e.target.value)}
-                      className="h-9 transition-smooth"
+                      className={`h-9 transition-smooth ${!isValidFormat && displayValue ? 'border-destructive border-2' : ''}`}
+                      title={!isValidFormat && displayValue ? 'Formato de data inválido. Use YYYY-MM' : ''}
                     />
                   </TableCell>
                   <TableCell>
@@ -142,7 +149,8 @@ export function MonthlyDataTable({ data, onChange }: MonthlyDataTableProps) {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>
