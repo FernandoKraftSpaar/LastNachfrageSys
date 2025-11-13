@@ -27,10 +27,10 @@ interface OptimizationFormProps {
 export function OptimizationForm({ onCalculate, isCalculating }: OptimizationFormProps) {
   const [params, setParams] = useState<FormParams>({
     risco: 5,
-    min_contract_kw: 100,
+    min_contract_kw: 30,
     step_size_kw: 10,
     delay_months: 1,
-    reduction_frequency_months: 6,
+    reduction_frequency_months: 12,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
