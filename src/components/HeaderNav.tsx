@@ -32,9 +32,9 @@ export function HeaderNav() {
               Calculadora
             </Link>
             <Link
-              to="/dashboard"
+              to="/tokens-demo"
               className={`text-sm font-medium transition-smooth hover:text-white/90 ${
-                isActive('/dashboard') ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'
+                isActive('/tokens-demo') ? 'text-white border-b-2 border-white pb-1' : 'text-white/70'
               }`}
             >
               Dashboard
