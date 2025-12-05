@@ -22,4 +22,3 @@
 
 export { ThemeProvider } from './ThemeProvider';
 export { tokens, colors, gradients, spacing, radii, shadows, typography, transitions, effects } from './tokens';
-export type { default as Tokens } from './tokens';

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tokens, colors, gradients } from '../src/theme/tokens';
+import { tokens, colors, gradients } from '@/theme/tokens';
 
 describe('Design Tokens', () => {
   describe('Colors', () => {
