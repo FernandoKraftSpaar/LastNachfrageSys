@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import TokensDemoPage from "./pages/TokensDemo";
 import NotFound from "./pages/NotFound";
+import DashboardSmartSpaar from "./pages/Dashboardsmart";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/tokens-demo" element={<TokensDemoPage />} />
+            <Route path="/smart-dashboard" element={<DashboardSmartSpaar/>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

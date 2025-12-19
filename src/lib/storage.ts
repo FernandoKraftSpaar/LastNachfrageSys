@@ -341,3 +341,5 @@ export function downloadFile(content: string, filename: string, mimeType: string
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+export type { MonthlyData };
+
