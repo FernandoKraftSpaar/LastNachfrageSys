@@ -19,8 +19,8 @@ const DADOS_MENSAIS = [
   { mes: 'Jan', medida: 420 },
   { mes: 'Fev', medida: 450 },
   { mes: 'Mar', medida: 480 },
-  { mes: 'Abr', medida: 510 }, // Multa Leve
-  { mes: 'Mai', medida: 530 }, // Multa Grave
+  { mes: 'Abr', medida: 510 }, // Ultrapassa limite contratado
+  { mes: 'Mai', medida: 530 }, // Ultrapassa limite contratado (maior excedente)
   { mes: 'Jun', medida: 490 }, // Mês Atual (Seguro)
 ];
 
