@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload } from "lucide-react";
+import { toast } from "sonner";
+import { parseSpreadsheetFile } from "@/lib/excelimporter";
 import { MonthlyData } from "@/lib/optimizer";
 
 interface MonthlyDataTableProps {
@@ -19,6 +21,9 @@ interface MonthlyDataTableProps {
 }
 
 export function MonthlyDataTable({ data, onChange }: MonthlyDataTableProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
   const addRow = () => {
     const newMonth = new Date().toISOString().slice(0, 7);
     onChange([
@@ -46,19 +51,73 @@ export function MonthlyDataTable({ data, onChange }: MonthlyDataTableProps) {
     onChange(updated);
   };
 
+  const normalizeImportedRow = (item: MonthlyData): MonthlyData => ({
+    ...item,
+    // Garantir compatibilidade com os campos usados na tabela
+    // O operador ?? (nullish coalescing) verifica apenas null/undefined, não zero
+    custo_demanda: item.tarifa_demanda_r_pkW ?? item.custo_demanda ?? 0,
+    custo_ultrapassagem: item.tarifa_ultrapassagem_r_pkW ?? item.custo_ultrapassagem ?? 0,
+  });
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    try {
+      const parsed = await parseSpreadsheetFile(file);
+      if (!parsed.length) {
+        toast.warning("Nenhuma linha válida encontrada no arquivo.");
+        return;
+      }
+
+      const normalized = parsed.map(normalizeImportedRow);
+      onChange(normalized);
+      toast.success(`Importamos ${normalized.length} registros da planilha.`);
+    } catch (error) {
+      toast.error("Erro ao importar planilha. Confira o formato do arquivo.");
+      console.error(error);
+    } finally {
+      setIsImporting(false);
+      // Permitir reimportar o mesmo arquivo limpando o input
+      event.target.value = "";
+    }
+  };
+
+  const triggerFileSelect = () => fileInputRef.current?.click();
+
   return (
     <Card className="p-6 shadow-card">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-6">
         <h2 className="text-xl font-semibold text-foreground">Dados Mensais</h2>
-        <Button
-          onClick={addRow}
-          variant="outline"
-          size="sm"
-          className="transition-smooth"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Adicionar Mês
-        </Button>
+        <div className="flex gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <Button
+            onClick={triggerFileSelect}
+            variant="outline"
+            size="sm"
+            className="transition-smooth"
+            disabled={isImporting}
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            {isImporting ? "Importando..." : "Importar planilha"}
+          </Button>
+          <Button
+            onClick={addRow}
+            variant="outline"
+            size="sm"
+            className="transition-smooth"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar Mês
+          </Button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
