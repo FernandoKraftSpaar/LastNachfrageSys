@@ -54,13 +54,9 @@ export function MonthlyDataTable({ data, onChange }: MonthlyDataTableProps) {
   const normalizeImportedRow = (item: MonthlyData): MonthlyData => ({
     ...item,
     // Garantir compatibilidade com os campos usados na tabela
-    // Verifica undefined/null explicitamente para não sobrescrever zeros válidos
-    custo_demanda: item.tarifa_demanda_r_pkW !== undefined && item.tarifa_demanda_r_pkW !== null 
-      ? item.tarifa_demanda_r_pkW 
-      : (item.custo_demanda !== undefined && item.custo_demanda !== null ? item.custo_demanda : 0),
-    custo_ultrapassagem: item.tarifa_ultrapassagem_r_pkW !== undefined && item.tarifa_ultrapassagem_r_pkW !== null
-      ? item.tarifa_ultrapassagem_r_pkW
-      : (item.custo_ultrapassagem !== undefined && item.custo_ultrapassagem !== null ? item.custo_ultrapassagem : 0),
+    // O operador ?? (nullish coalescing) verifica apenas null/undefined, não zero
+    custo_demanda: item.tarifa_demanda_r_pkW ?? item.custo_demanda ?? 0,
+    custo_ultrapassagem: item.tarifa_ultrapassagem_r_pkW ?? item.custo_ultrapassagem ?? 0,
   });
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
