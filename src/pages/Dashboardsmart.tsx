@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Cell 
 } from 'recharts';
@@ -6,11 +6,7 @@ import {
   Zap, 
   CheckCircle, 
   AlertTriangle, 
-  Menu, 
-  Bell, 
-  Search, 
-  User, 
-  ArrowUpRight 
+  Bell
 } from 'lucide-react';
 
 // --- CONFIGURAÇÕES E DADOS (Simulação vinda da API) ---
@@ -134,18 +130,24 @@ export default function DashboardSmartSpaar() {
             <LogoSmartSpaar />
             {/* Navegação Desktop */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <a href="#" className="text-primary">Painel Geral</a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Faturas</a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">Relatórios</a>
+              <button type="button" className="text-primary">Painel Geral</button>
+              <button type="button" className="text-muted-foreground hover:text-primary transition-colors">Faturas</button>
+              <button type="button" className="text-muted-foreground hover:text-primary transition-colors">Relatórios</button>
             </nav>
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="relative p-2 text-muted-foreground hover:bg-secondary rounded-full transition-colors">
+            <button 
+              className="relative p-2 text-muted-foreground hover:bg-secondary rounded-full transition-colors"
+              onClick={() => {
+                // TODO: implementar funcionalidade de notificações
+              }}
+            >
               <Bell className="h-5 w-5" />
               <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-card"></span>
             </button>
             <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+              {/* TODO: usar iniciais dinâmicas do usuário atual */}
               IM
             </div>
           </div>
@@ -162,14 +164,25 @@ export default function DashboardSmartSpaar() {
             </h1>
             <p className="text-muted-foreground mt-1 flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+              {/* TODO: usar nome e UC dinâmicos do cliente atual */}
               Indústria Metalúrgica do Vale (UC 9982)
             </p>
           </div>
           <div className="flex gap-2">
-            <button className="inline-flex items-center justify-center h-9 px-4 py-2 text-sm font-medium transition-colors bg-card border border-input rounded-md hover:bg-accent hover:text-accent-foreground shadow-sm">
+            <button
+              className="inline-flex items-center justify-center h-9 px-4 py-2 text-sm font-medium transition-colors bg-card border border-input rounded-md hover:bg-accent hover:text-accent-foreground shadow-sm"
+              onClick={() => {
+                // TODO: implementar exportação em PDF
+              }}
+            >
               Exportar PDF
             </button>
-            <button className="inline-flex items-center justify-center h-9 px-4 py-2 text-sm font-medium text-white transition-colors bg-primary rounded-md hover:bg-primary/90 shadow-sm">
+            <button
+              className="inline-flex items-center justify-center h-9 px-4 py-2 text-sm font-medium text-white transition-colors bg-primary rounded-md hover:bg-primary/90 shadow-sm"
+              onClick={() => {
+                // TODO: implementar lógica de nova simulação
+              }}
+            >
               Nova Simulação
             </button>
           </div>
@@ -198,7 +211,7 @@ export default function DashboardSmartSpaar() {
           {/* Card 2: Demanda Medida */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all">
             <div className="flex items-center justify-between pb-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Consumo Atual (Jun)</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">Consumo Atual ({MES_ATUAL.mes})</h3>
               <Zap className={`h-4 w-4 ${MES_ATUAL.medida > CONTRATADA ? 'text-destructive' : 'text-accent'}`} />
             </div>
             <div>

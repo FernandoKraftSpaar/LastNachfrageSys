@@ -1,9 +1,9 @@
-// src/lib/excel-importer.ts
+// src/lib/excelimporter.ts
 import * as XLSX from 'xlsx';
-import { MonthlyData } from './storage'; // Importando a tipagem existente
+import { MonthlyData } from './optimizer'; // Importando a tipagem existente diretamente da origem
 
 // Converte strings numéricas em formato pt-BR ("1.234,56") para número
-const parseNumberPtBr = (value: any): number => {
+const parseNumberPtBr = (value: unknown): number => {
   if (typeof value === 'number') return value;
   if (typeof value === 'string') {
     const cleaned = value
@@ -17,7 +17,9 @@ const parseNumberPtBr = (value: any): number => {
 };
 
 // Função auxiliar para converter data do Excel ou Texto para YYYY-MM
-const parseExcelDate = (value: any): string => {
+// NOTA: Para datas seriais do Excel, o ajuste de timezone é aplicado
+// para garantir consistência. Pode variar conforme o timezone local.
+const parseExcelDate = (value: unknown): string => {
   try {
     // Caso 1: Serial numérico do Excel (ex: 42005)
     if (typeof value === 'number') {
@@ -42,7 +44,7 @@ const parseExcelDate = (value: any): string => {
       const normalized = clean.replace(/\./g, '/').replace(/-/g, '/');
 
       // Formatos YYYY-MM ou YYYY/MM
-      const isoMatch = normalized.match(/^(\d{4})[\/]?(\d{2})$/);
+      const isoMatch = normalized.match(/^(\d{4})[/]?(\d{2})$/);
       if (isoMatch) {
         const [, y, m] = isoMatch;
         return `${y}-${m}`;
@@ -65,7 +67,7 @@ const parseExcelDate = (value: any): string => {
       const monthNames: Record<string, string> = {
         jan: '01', janeiro: '01',
         fev: '02', fevereiro: '02',
-        mar: '03', março: '03', marco: '03',
+        mar: '03', março: '03',
         abr: '04', abril: '04',
         mai: '05', maio: '05',
         jun: '06', junho: '06',
@@ -83,7 +85,15 @@ const parseExcelDate = (value: any): string => {
         const yearPart = parts[1];
         const month = monthNames[monthPart];
         if (month && yearPart) {
-          const year = yearPart.length === 2 ? `20${yearPart}` : yearPart;
+          // Usa ano pivô: < 50 = 20xx, >= 50 = 19xx
+          let year: string;
+          if (/^\d{2}$/.test(yearPart)) {
+            const yearNum = parseInt(yearPart, 10);
+            const fullYear = yearNum < 50 ? 2000 + yearNum : 1900 + yearNum;
+            year = String(fullYear);
+          } else {
+            year = yearPart;
+          }
           return `${year}-${month}`;
         }
       }
@@ -96,7 +106,7 @@ const parseExcelDate = (value: any): string => {
   }
 };
 
-export const parseExcelFile = async (file: File): Promise<MonthlyData[]> => {
+export const parseSpreadsheetFile = async (file: File): Promise<MonthlyData[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -116,7 +126,7 @@ export const parseExcelFile = async (file: File): Promise<MonthlyData[]> => {
         });
 
         // Remove o cabeçalho (primeira linha)
-        const rows = jsonData.slice(1) as any[];
+        const rows = jsonData.slice(1) as unknown[][];
 
         const invalidRows: number[] = [];
 
@@ -144,6 +154,7 @@ export const parseExcelFile = async (file: File): Promise<MonthlyData[]> => {
                 ano_mes: anoMes,
                 demanda_contratada_kw: parseNumberPtBr(rawContratada),
                 demanda_medida_kw: parseNumberPtBr(rawMedida),
+                // AVISO: Tarifas hardcoded como 0. Configure estes valores antes de calcular custos.
                 tarifa_demanda_r_pkW: 0,
                 tarifa_ultrapassagem_r_pkW: 0,
               };

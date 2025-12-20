@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { parseExcelFile } from "@/lib/excelimporter";
+import { parseSpreadsheetFile } from "@/lib/excelimporter";
 import { MonthlyData } from "@/lib/optimizer";
 
 interface MonthlyDataTableProps {
@@ -54,9 +54,9 @@ export function MonthlyDataTable({ data, onChange }: MonthlyDataTableProps) {
   const normalizeImportedRow = (item: MonthlyData): MonthlyData => ({
     ...item,
     // Garantir compatibilidade com os campos usados na tabela
+    // O operador ?? (nullish coalescing) verifica apenas null/undefined, não zero
     custo_demanda: item.tarifa_demanda_r_pkW ?? item.custo_demanda ?? 0,
-    custo_ultrapassagem:
-      item.tarifa_ultrapassagem_r_pkW ?? item.custo_ultrapassagem ?? 0,
+    custo_ultrapassagem: item.tarifa_ultrapassagem_r_pkW ?? item.custo_ultrapassagem ?? 0,
   });
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +65,7 @@ export function MonthlyDataTable({ data, onChange }: MonthlyDataTableProps) {
 
     setIsImporting(true);
     try {
-      const parsed = await parseExcelFile(file);
+      const parsed = await parseSpreadsheetFile(file);
       if (!parsed.length) {
         toast.warning("Nenhuma linha válida encontrada no arquivo.");
         return;
