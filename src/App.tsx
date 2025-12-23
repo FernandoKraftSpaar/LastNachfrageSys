@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/theme";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import DashboardUI from "./pages/DashboardUI";
 import TokensDemoPage from "./pages/TokensDemo";
 import NotFound from "./pages/NotFound";
 import DashboardSmartSpaar from "./pages/Dashboardsmart";
@@ -22,6 +23,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard-ui" element={<DashboardUI />} />
             <Route path="/tokens-demo" element={<TokensDemoPage />} />
             <Route path="/smart-dashboard" element={<DashboardSmartSpaar />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -18,6 +18,6 @@ export default defineConfig(({ mode }) => ({
   },
   test: {
     globals: true,
-    environment: "node",
+    environment: "happy-dom",
   },
 }));
